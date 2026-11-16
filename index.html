@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lens — any science topic, as something you step through</title>
+<meta name="description" content="Type a science topic. Lens has Pollinations write a short explanation in stages and paint an illustration for each one, so you can walk through it at your own pace. Free, no account, your own Pollinations key stays in your browser.">
+<link rel="canonical" href="https://polli-lens.surge.sh/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Lens">
+<meta property="og:description" content="A science topic turned into something you step through, with an illustration at every stage.">
+<meta property="og:url" content="https://polli-lens.surge.sh/">
+<meta name="theme-color" content="#0a0f14">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230a0f14'/%3E%3Ccircle cx='28' cy='28' r='12' fill='none' stroke='%236fd3c7' stroke-width='5'/%3E%3Cpath d='M37 37l11 11' stroke='%236fd3c7' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --ink: #eef4f2;
+    --muted: #8fa3a6;
+    --accent: #6fd3c7;
+    --accent-dim: #2c5f5c;
+    --bg: #0a0f14;
+    --panel: #101920;
+    --line: #1d2b33;
+    --warn: #e8a45c;
+    --bad: #e2725b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: radial-gradient(900px 500px at 15% -10%, #14252c 0%, var(--bg) 65%);
+    color: var(--ink);
+    font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    flex-wrap: wrap; max-width: 1080px; margin: 0 auto; padding: 26px 22px 8px;
+  }
+  .brand { display: flex; align-items: baseline; gap: 10px; }
+  h1 { font-size: clamp(21px, 3vw, 28px); margin: 0; letter-spacing: .01em; font-weight: 650; }
+  h1 b { color: var(--accent); font-weight: 650; }
+  .tagline { color: var(--muted); font-size: 14px; margin: 0; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+    color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
+    padding: 6px 13px; font-size: 12.5px; background: #0d161c;
+  }
+  .badge i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); display: block; }
+  .badge:hover { border-color: var(--accent-dim); }
+  main { max-width: 1080px; margin: 0 auto; padding: 10px 22px 60px; }
+
+  .setup { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-bottom: 22px; }
+  .setup-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 16px; }
+  @media (max-width: 780px) { .setup-grid { grid-template-columns: 1fr; } }
+  label { display: block; font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  input[type="text"], input[type="password"] {
+    width: 100%; background: #0b1319; color: var(--ink); border: 1px solid var(--line);
+    border-radius: 10px; padding: 11px 12px; font: inherit; font-size: 15px; outline: none;
+  }
+  input:focus { border-color: var(--accent-dim); }
+  .hint { color: var(--muted); font-size: 12.5px; margin: 6px 0 0; line-height: 1.5; }
+  .hint a { color: var(--accent); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 0; }
+  .chip {
+    font: inherit; font-size: 13px; cursor: pointer; color: var(--ink);
+    background: #0b1319; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px;
+  }
+  .chip:hover { border-color: var(--accent-dim); color: var(--accent); }
+  .row { display: flex; gap: 12px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+  button {
+    font: inherit; font-weight: 600; cursor: pointer; border-radius: 10px;
+    border: 1px solid var(--line); background: #161f27; color: var(--ink); padding: 12px 18px;
+  }
+  button:hover:not(:disabled) { border-color: #2b3d47; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #06211e; }
+  button.primary:hover:not(:disabled) { background: #85ded4; }
+  .toggle { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13.5px; cursor: pointer; }
+  .toggle input { accent-color: var(--accent); }
+  #status { min-height: 20px; font-size: 13.5px; color: var(--muted); margin: 12px 0 0; }
+  #status.err { color: var(--bad); }
+
+  .explainer { display: none; }
+  .explainer.on { display: block; }
+  .head { margin: 0 0 6px; }
+  .head h2 { font-size: clamp(20px, 2.6vw, 26px); margin: 0 0 6px; line-height: 1.25; }
+  .head p { color: var(--muted); margin: 0; font-size: 15px; max-width: 62ch; }
+
+  .stepper { display: flex; gap: 8px; margin: 18px 0 14px; flex-wrap: wrap; }
+  .step-dot {
+    font: inherit; font-size: 13px; cursor: pointer; padding: 7px 13px; border-radius: 999px;
+    background: #0d161c; border: 1px solid var(--line); color: var(--muted);
+  }
+  .step-dot[aria-current="true"] { border-color: var(--accent); color: var(--accent); }
+  .step-dot.done { color: var(--ink); border-color: #2b3d47; }
+
+  .stage {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px;
+    align-items: start;
+  }
+  @media (max-width: 820px) { .stage { grid-template-columns: 1fr; } }
+  .stage h3 { margin: 0 0 8px; font-size: 19px; }
+  .stage p.explain { margin: 0 0 14px; color: #d6e3e0; }
+  .probe { border-top: 1px solid var(--line); padding-top: 12px; }
+  .probe .q { font-size: 14px; color: var(--accent); margin: 0 0 8px; }
+  .probe .a { font-size: 14px; color: var(--ink); background: #0b1319; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 0; display: none; }
+  .probe .a.on { display: block; }
+  .probe button { padding: 8px 13px; font-size: 13.5px; }
+
+  .art {
+    background: #0b1319; border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+    min-height: 220px; display: grid; place-items: center; position: relative;
+  }
+  .art img { width: 100%; height: auto; display: block; }
+  .art .placeholder { color: var(--muted); font-size: 13.5px; text-align: center; padding: 40px 18px; line-height: 1.6; }
+  .art .placeholder b { color: var(--ink); }
+  .art .ribbon {
+    position: absolute; top: 10px; left: 10px; font-size: 11.5px; letter-spacing: .06em;
+    text-transform: uppercase; color: #06211e; background: var(--accent); border-radius: 999px; padding: 3px 9px;
+  }
+  .nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; }
+  .nav button { flex: 1; }
+  footer { max-width: 1080px; margin: 0 auto; padding: 0 22px 46px; color: var(--muted); font-size: 13px; }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="brand"><h1>Len<b>s</b></h1></div>
+    <p class="tagline">Any science topic, drawn out in stages you can step through.</p>
+  </div>
+  <a class="badge" href="https://pollinations.ai/?ref=badge" target="_blank" rel="noopener"><i></i>Made with pollinations.ai</a>
+</header>
+
+<main>
+  <section class="setup" aria-label="Topic and key">
+    <div class="setup-grid">
+      <div>
+        <label for="topic">Science topic</label>
+        <input id="topic" type="text" maxlength="120" placeholder="why the sky is blue">
+        <div class="chips" id="chips">
+          <button class="chip" type="button">photosynthesis</button>
+          <button class="chip" type="button">black holes</button>
+          <button class="chip" type="button">how vaccines work</button>
+          <button class="chip" type="button">plate tectonics</button>
+          <button class="chip" type="button">why ice floats</button>
+        </div>
+      </div>
+      <div>
+        <label for="key">Your Pollinations key</label>
+        <input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="sk_...">
+        <p class="hint">Stored in this browser only and sent to gen.pollinations.ai, nowhere else. Free at <a href="https://enter.pollinations.ai/keys" target="_blank" rel="noopener">enter.pollinations.ai/keys</a>.</p>
+      </div>
+    </div>
+    <div class="row">
+      <button id="build" class="primary" type="button">Build the explainer</button>
+      <label class="toggle"><input id="autopaint" type="checkbox" checked> Paint illustrations as I go</label>
+    </div>
+    <p id="status" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="explainer" id="explainer" aria-live="polite">
+    <div class="head">
+      <h2 id="plan-title"></h2>
+      <p id="plan-summary"></p>
+    </div>
+    <div class="stepper" id="stepper" role="tablist" aria-label="Stages"></div>
+    <div class="stage" id="stage">
+      <div>
+        <h3 id="stage-name"></h3>
+        <p class="explain" id="stage-explain"></p>
+        <div class="probe">
+          <p class="q" id="stage-probe"></p>
+          <button id="reveal" type="button">Reveal the answer</button>
+          <p class="a" id="stage-answer"></p>
+        </div>
+      </div>
+      <div>
+        <div class="art" id="art"><div class="placeholder">The illustration for this stage appears here.</div></div>
+      </div>
+    </div>
+    <div class="nav">
+      <button id="prev" type="button">Previous</button>
+      <button id="paint" type="button">Paint this illustration</button>
+      <button id="next" type="button">Next stage</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>Explanations and illustrations by <a href="https://pollinations.ai/?ref=badge" target="_blank" rel="noopener">Pollinations</a>, using your own key. Nothing you type leaves this page except to Pollinations, and nothing is stored on a server. Illustrations are generated images, so treat them as illustrations, not diagrams to measure or quote.</p>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var $ = function (id) { return document.getElementById(id); };
+  var topicEl = $("topic"), keyEl = $("key"), buildBtn = $("build"), autoEl = $("autopaint");
+  var statusEl = $("status"), explainer = $("explainer");
+  var planTitle = $("plan-title"), planSummary = $("plan-summary"), stepper = $("stepper");
+  var stageName = $("stage-name"), stageExplain = $("stage-explain");
+  var stageProbe = $("stage-probe"), stageAnswer = $("stage-answer"), revealBtn = $("reveal");
+  var art = $("art"), prevBtn = $("prev"), nextBtn = $("next"), paintBtn = $("paint");
+  var K = { key: "lens.key", topic: "lens.topic", auto: "lens.auto" };
+  var TEXT_MODEL = "openai/gpt-5.4-nano";
+  var IMAGE_MODEL = "flux";
+  var plan = null, index = 0, busy = false;
+  var artCache = {};        // stage index -> object URL
+  var pending = {};         // stage index -> true while painting
+
+  function setStatus(text, isError) {
+    statusEl.textContent = text || "";
+    statusEl.className = isError ? "err" : "";
+  }
+
+  function remember(el, storageKey, isCheckbox) {
+    try {
+      var saved = localStorage.getItem(storageKey);
+      if (saved !== null && saved !== "") {
+        if (isCheckbox) el.checked = saved === "1";
+        else el.value = saved;
+      }
+    } catch (e) {}
+    var save = function () {
+      try { localStorage.setItem(storageKey, isCheckbox ? (el.checked ? "1" : "0") : el.value); } catch (e) {}
+    };
+    el.addEventListener("change", save);
+    el.addEventListener("input", save);
+  }
+  remember(keyEl, K.key, false);
+  remember(topicEl, K.topic, false);
+  remember(autoEl, K.auto, true);
+
+  Array.prototype.forEach.call(document.querySelectorAll(".chip"), function (chip) {
+    chip.addEventListener("click", function () {
+      topicEl.value = chip.textContent;
+      topicEl.focus();
+    });
+  });
+
+  function keyValue() { return keyEl.value.trim(); }
+
+  function planPrompt(topic) {
+    return "Return ONLY a JSON object, no prose and no code fences. "
+      + "Create an interactive explanation plan for the science topic: " + topic + ". "
+      + 'Shape: {"title": string, "summary": string, "stages": [{"name": string, "explain": string, "image_prompt": string, "probe": string, "answer": string}]}. '
+      + "Exactly 3 stages, in a sensible order for teaching. "
+      + "Keep explain under 240 characters, probe under 90, answer under 170, title under 70, summary under 200. "
+      + "image_prompt describes one clean scientific illustration for that stage, under 200 characters, and must not ask for any text, labels or lettering. "
+      + "probe is a short question the reader can try to answer; answer is the one or two sentence solution. "
+      + "Be accurate. If the topic is not science, still answer with the closest relevant science framing.";
+  }
+
+  function extractJson(text) {
+    var clean = text.replace(/^```(?:json)?/i, "").replace(/```\s*$/, "").trim();
+    var start = clean.indexOf("{");
+    var end = clean.lastIndexOf("}");
+    if (start === -1 || end === -1 || end <= start) throw new Error("The reply was not JSON.");
+    var slice = clean.slice(start, end + 1);
+    try {
+      return JSON.parse(slice);
+    } catch (e) {
+      // tolerate trailing commas, a common model slip
+      var repaired = slice.replace(/,\s*([}\]])/g, "$1");
+      return JSON.parse(repaired);
+    }
+  }
+
+  function validate(p) {
+    if (!p || typeof p !== "object") throw new Error("The reply was empty.");
+    if (!Array.isArray(p.stages) || !p.stages.length) throw new Error("No stages came back.");
+    p.stages = p.stages.slice(0, 5).map(function (s) {
+      return {
+        name: String(s.name || "Stage").slice(0, 120),
+        explain: String(s.explain || "").slice(0, 900),
+        image_prompt: String(s.image_prompt || "").slice(0, 400),
+        probe: String(s.probe || "").slice(0, 240),
+        answer: String(s.answer || "").slice(0, 400)
+      };
+    });
+    return {
+      title: String(p.title || "Untitled").slice(0, 120),
+      summary: String(p.summary || "").slice(0, 400),
+      stages: p.stages
+    };
+  }
+
+  function askPlanner(topic) {
+    var body = JSON.stringify({
+      model: TEXT_MODEL,
+      messages: [{ role: "user", content: planPrompt(topic) }],
+      max_tokens: 2600
+    });
+    return fetch("https://gen.pollinations.ai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + keyValue() },
+      body: body
+    }).then(function (res) {
+      if (res.ok) return res.json();
+      return res.text().then(function (t) {
+        var msg = "";
+        try { msg = (JSON.parse(t).error || {}).message || ""; } catch (e) {}
+        if (res.status === 401 || res.status === 403) throw new Error("That key was refused. Check it at enter.pollinations.ai/keys.");
+        if (res.status === 402) throw new Error("This key has no pollen left for the text model.");
+        if (res.status === 429) throw new Error("Rate limited. Wait a minute and build again.");
+        throw new Error(msg || ("Pollinations answered " + res.status + " for the text model."));
+      });
+    }).then(function (data) {
+      var content = data && data.choices && data.choices[0] && data.choices[0].message
+        ? data.choices[0].message.content : "";
+      return validate(extractJson(content || ""));
+    });
+  }
+
+  function paintStage(i) {
+    if (pending[i] || artCache[i] || !plan) return Promise.resolve();
+    var stage = plan.stages[i];
+    if (!stage || !stage.image_prompt) return Promise.resolve();
+    pending[i] = true;
+    if (i === index) renderArt();
+
+    var seed = 1000 + i * 37;
+    var prompt = stage.image_prompt + ", educational science illustration, clear composition, generous negative space, no text, no labels, no lettering, no watermark";
+    var url = "https://gen.pollinations.ai/image/" + encodeURIComponent(prompt)
+      + "?model=" + IMAGE_MODEL + "&width=1024&height=1024&nologo=true&seed=" + seed;
+
+    return fetch(url, { headers: { Authorization: "Bearer " + keyValue() } })
+      .then(function (res) {
+        if (!res.ok) {
+          if (res.status === 402) throw new Error("No pollen left for this illustration.");
+          if (res.status === 429) throw new Error("Rate limited on images. Wait a minute.");
+          if (res.status === 401 || res.status === 403) throw new Error("The key was refused for images.");
+          throw new Error("Illustration request failed (" + res.status + ").");
+        }
+        return res.blob();
+      })
+      .then(function (blob) {
+        artCache[i] = URL.createObjectURL(blob);
+      })
+      .catch(function (error) {
+        if (i === index) setStatus(error.message, true);
+      })
+      .then(function () {
+        pending[i] = false;
+        if (i === index) renderArt();
+      });
+  }
+
+  function renderArt() {
+    var i = index;
+    if (artCache[i]) {
+      art.innerHTML = '<span class="ribbon">stage ' + (i + 1) + '</span>';
+      var img = document.createElement("img");
+      img.alt = "Illustration for " + (plan.stages[i].name || "this stage");
+      img.src = artCache[i];
+      art.appendChild(img);
+    } else if (pending[i]) {
+      art.innerHTML = '<div class="placeholder"><b>Painting…</b><br>One image render from your key.</div>';
+    } else {
+      art.innerHTML = '<div class="placeholder">No illustration yet.<br><b>Press "Paint this illustration"</b>, or turn on auto-paint.</div>';
+    }
+  }
+
+  function renderStepper() {
+    stepper.innerHTML = "";
+    plan.stages.forEach(function (stage, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "step-dot" + (i === index ? "" : (artCache[i] ? " done" : ""));
+      b.setAttribute("aria-current", i === index ? "true" : "false");
+      b.textContent = (i + 1) + ". " + stage.name.replace(/^stage\s*\d+\s*[:.-]\s*/i, "");
+      b.addEventListener("click", function () { show(i); });
+      stepper.appendChild(b);
+    });
+  }
+
+  function show(i) {
+    if (!plan) return;
+    index = Math.max(0, Math.min(plan.stages.length - 1, i));
+    var stage = plan.stages[index];
+    stageName.textContent = stage.name;
+    stageExplain.textContent = stage.explain;
+    stageProbe.textContent = stage.probe || "No probe for this stage.";
+    stageAnswer.textContent = stage.answer || "";
+    stageAnswer.classList.remove("on");
+    revealBtn.hidden = !stage.answer;
+    revealBtn.textContent = "Reveal the answer";
+    prevBtn.disabled = index === 0;
+    nextBtn.disabled = index === plan.stages.length - 1;
+    paintBtn.disabled = !!artCache[index] || !!pending[index];
+    paintBtn.textContent = artCache[index] ? "Illustration ready" : "Paint this illustration";
+    renderArt();
+    renderStepper();
+    if (autoEl.checked && !artCache[index] && !pending[index]) paintStage(index).then(renderStepper);
+  }
+
+  function build() {
+    if (busy) return;
+    var topic = topicEl.value.trim();
+    if (!keyValue()) { setStatus("Paste your Pollinations key first.", true); keyEl.focus(); return; }
+    if (!topic) { setStatus("Give me a topic to explain.", true); topicEl.focus(); return; }
+    busy = true;
+    buildBtn.disabled = true;
+    setStatus("Reading up...");
+    var started = Date.now();
+    Object.keys(artCache).forEach(function (k) { URL.revokeObjectURL(artCache[k]); });
+    artCache = {}; pending = {}; plan = null; index = 0;
+
+    askPlanner(topic)
+      .then(function (p) {
+        plan = p;
+        planTitle.textContent = p.title;
+        planSummary.textContent = p.summary;
+        explainer.classList.add("on");
+        var secs = ((Date.now() - started) / 1000).toFixed(1);
+        setStatus("Plan ready in " + secs + "s. " + p.stages.length + " stages.");
+        show(0);
+        explainer.scrollIntoView({ behavior: "smooth", block: "start" });
+      })
+      .catch(function (error) {
+        setStatus(error.message || "Something went wrong.", true);
+        explainer.classList.remove("on");
+      })
+      .then(function () {
+        busy = false;
+        buildBtn.disabled = false;
+      });
+  }
+
+  buildBtn.addEventListener("click", build);
+  topicEl.addEventListener("keydown", function (e) { if (e.key === "Enter") build(); });
+  prevBtn.addEventListener("click", function () { show(index - 1); });
+  nextBtn.addEventListener("click", function () { show(index + 1); });
+  paintBtn.addEventListener("click", function () { paintStage(index).then(function () { show(index); }); });
+  revealBtn.addEventListener("click", function () {
+    stageAnswer.classList.toggle("on");
+    revealBtn.textContent = stageAnswer.classList.contains("on") ? "Hide the answer" : "Reveal the answer";
+  });
+  document.addEventListener("keydown", function (e) {
+    if (!explainer.classList.contains("on")) return;
+    if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+    if (e.key === "ArrowRight") show(index + 1);
+    if (e.key === "ArrowLeft") show(index - 1);
+  });
+})();
+</script>
+</body>
+</html>
